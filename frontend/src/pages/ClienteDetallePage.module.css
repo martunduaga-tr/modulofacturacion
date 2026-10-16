@@ -1,0 +1,51 @@
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin-bottom: var(--space-4);
+}
+.back:hover { color: var(--ink); text-decoration: none; }
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.headMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+.metaItem { display: flex; flex-direction: column; gap: 1px; }
+.metaLabel { font-size: var(--text-xs); color: var(--ink-subtle); }
+.metaValue { color: var(--ink); }
+
+.observaciones {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  max-width: 60ch;
+}
+
+.itemsHead {
+  font-size: var(--text-sm);
+  color: var(--ink-subtle);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: var(--space-8) 0 var(--space-3);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}

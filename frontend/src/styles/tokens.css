@@ -1,0 +1,100 @@
+/* Tokens del sistema de diseño — Transfiriendo Design System (Manual de Marca
+   2024), dirección Material · modo claro. Portado desde el proyecto de Claude
+   Design "Transfiriendo Design System" (17b674c6-3037-4a24-9c82-748b43afee9b).
+   Mismos NOMBRES de variable que antes para no tocar los .module.css; los
+   VALORES pasan de la paleta cobalto/ámbar ad hoc a la marca real. */
+:root {
+  /* Superficies — lienzo cálido (--bg) vs. superficie blanca (--surface) */
+  --bg: #f5f4f2;
+  --surface: #ffffff;
+  --surface-sunken: #fafafa;
+  --border: #eceae7;
+  --border-strong: #e0ded9;
+
+  /* Tinta — gris de marca (PANTONE 425 C) */
+  --ink: #2f2f2f;
+  --ink-muted: #565656;
+  --ink-subtle: #6d6d6d;
+
+  /* Primario — naranja de marca (PANTONE 1585 C), única acción */
+  --primary: #fc7603;
+  /* El fill NO cambia en hover (oscurecerlo rompe AA con texto oscuro); este
+     tono se usa para TEXTO en botones secundarios/ghost al pasar el mouse. */
+  --primary-hover: #b04f00;
+  --primary-weak: #fff4ea;
+  /* El naranja de marca no admite texto blanco (2,72:1) — texto oscuro sobre fill. */
+  --on-primary: #2f2f2f;
+
+  /* Acento — alias de compatibilidad: ya no hay un segundo color de marca. */
+  --accent: var(--primary);
+  --accent-strong: #b04f00;
+  --accent-weak: #fff4ea;
+
+  /* Semánticos */
+  --ok: #5c7553;
+  --ok-weak: rgba(135, 163, 125, .15);
+  --warn: #b04f00;
+  --warn-weak: rgba(252, 160, 58, .14);
+  --danger: #bb4520;
+  --danger-weak: rgba(236, 102, 59, .10);
+  --neutral: #565656;
+  --neutral-weak: #f2f2f2;
+
+  --focus-ring: rgba(252, 118, 3, .12);
+
+  /* Tipografía — Poppins (marca, solo h1-h3) + IBM Plex Sans (interfaz) + JetBrains Mono */
+  --font-brand: "Poppins", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 17px;
+  --text-xl: 19px;
+  --text-2xl: 22px;
+  --text-3xl: 28px;
+  --leading-body: 1.55;
+  --leading-tight: 1.15;
+
+  /* Espaciado (base 4px) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* Radios — dirección Material */
+  --radius-sm: 8px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+
+  /* Elevación — sombras suaves y bajas; el naranja solo aparece en botón/card accionables */
+  --shadow-sm: 0 1px 3px rgba(47, 47, 47, .09);
+  --shadow-md: 0 4px 12px rgba(47, 47, 47, .10);
+  --shadow-lg: 0 12px 32px rgba(47, 47, 47, .12);
+  --shadow-accent: 0 2px 6px rgba(252, 118, 3, .3);
+  --shadow-accent-lg: 0 6px 16px rgba(252, 118, 3, .4);
+  --shadow-hover: 0 10px 30px -10px rgba(252, 118, 3, .22);
+
+  /* Navegación oscura (sidebar) — Transfiriendo Design System, css/library.css .trf-sidebar */
+  --sidebar-bg: #2f2f2f;
+  --sidebar-text: #9a9a9a;
+  --sidebar-text-active: #ffffff;
+  --sidebar-w-collapsed: 72px;
+
+  /* z-index semántico */
+  --z-dropdown: 10;
+  --z-sticky: 20;
+  --z-backdrop: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+  --z-tooltip: 60;
+
+  /* Layout */
+  --sidebar-w: 248px;
+  --topbar-h: 60px;
+}

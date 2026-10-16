@@ -1,0 +1,14 @@
+.aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--warn-weak);
+  color: var(--ink);
+  border: 1px solid var(--warn);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-5);
+}
+.aviso svg { flex-shrink: 0; color: var(--warn); margin-top: 1px; }
+.aviso strong { font-weight: 600; }

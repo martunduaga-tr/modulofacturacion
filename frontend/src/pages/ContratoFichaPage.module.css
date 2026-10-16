@@ -1,0 +1,87 @@
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin-bottom: var(--space-4);
+}
+.back:hover { color: var(--ink); text-decoration: none; }
+
+.clienteLink { color: inherit; text-decoration: none; }
+.clienteLink:hover { color: var(--primary); text-decoration: underline; }
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.headMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+}
+.metaItem { display: flex; flex-direction: column; gap: 1px; }
+.metaLabel { font-size: var(--text-xs); color: var(--ink-subtle); }
+.metaValue { color: var(--ink); }
+
+.itemsHead {
+  font-size: var(--text-sm);
+  color: var(--ink-subtle);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: var(--space-8) 0 var(--space-3);
+}
+
+.item { padding: var(--space-5); margin-bottom: var(--space-4); }
+.itemHead {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+.itemTitle { font-size: var(--text-lg); font-weight: 600; }
+.itemConcepto { color: var(--ink-muted); font-weight: 400; }
+.spacer { flex: 1; }
+
+.itemActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.yearRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+.yearLabel { font-size: var(--text-sm); color: var(--ink-muted); }
+.yearSelect { width: auto; min-width: 100px; height: 32px; }
+
+.minimo {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--accent-weak);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+}
+.minimoLabel { font-size: var(--text-sm); color: oklch(0.5 0.08 60); }
+.minimoValue { font-size: var(--text-lg); font-weight: 600; color: oklch(0.42 0.09 60); }
+
+.fijo {
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  color: var(--ink);
+  padding: var(--space-2) 0;
+}

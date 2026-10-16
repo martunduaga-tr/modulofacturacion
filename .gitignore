@@ -1,0 +1,58 @@
+# Dependencias
+node_modules/
+dist/
+build/
+
+# Entorno / secretos
+.env
+.env.*
+!.env.example
+
+# Credenciales de service account (Google Cloud) que a veces se copian a la
+# raiz del proyecto para scripts locales — nunca deben versionarse.
+/*.json
+!/package.json
+cflorez.json
+**/cflorez.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editores / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Excel de origen (datos sensibles de clientes — no versionar)
+*.xlsx
+*.xls
+
+# Artefactos generados por la migración (contienen tarifas/NITs — sensibles)
+migration/reporte_*.txt
+migration/bloques_parseados.json
+
+# Temporales
+*.tmp
+tmp/
+
+# Reporte de ingesta de volumenes (NITs)
+migration/reporte_volumenes.txt
+
+# Inventario y reporte de vigencia (NITs reales, mismo criterio que arriba)
+migration/inventario_contratos_coe.csv
+migration/reporte_vigencia_2026.txt
+
+# Reportes de simulacion desde BigQuery (NITs/clientes/volumenes reales)
+migration/reporte_simulacion_bigquery_*.txt
+
+# Reportes de carga (nombres/NITs reales de clientes, mismo criterio que arriba)
+migration/reporte_carga.txt
+migration/reporte_carga_clientes.txt
+
+# Cache de Python
+__pycache__/
+
+# Capturas de verificacion de Playwright MCP (no son parte del proyecto)
+.playwright-mcp/

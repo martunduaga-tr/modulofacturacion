@@ -1,0 +1,114 @@
+/* Slide · Login del Transfiriendo Design System, adaptada a pantalla real
+   (funcional, responsive) en vez de la diapositiva estática 16:9 del sistema.
+   El panel de marca usa la paleta FIJA (no los tokens temáticos): es un
+   momento de marca, no una superficie de la interfaz — mismo criterio que
+   usa el propio sistema de diseño para sus plantillas. */
+
+.wrap {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
+}
+
+/* ---- Panel de marca (izquierda) ---- */
+.brandPanel {
+  position: relative;
+  overflow: hidden;
+  background: #2f2f2f;
+  padding: var(--space-12) var(--space-8);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #ffffff;
+}
+
+.glow {
+  position: absolute;
+  top: -120px;
+  right: -120px;
+  width: 460px;
+  height: 460px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(252, 118, 3, 0.35), transparent 68%);
+  pointer-events: none;
+}
+
+.brandCopy { position: relative; }
+
+.overline {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ffab5c;
+}
+
+.headline {
+  margin: var(--space-4) 0 0;
+  font-family: var(--font-brand);
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  color: #ffffff;
+  max-width: 440px;
+}
+
+.tagline {
+  margin: var(--space-4) 0 0;
+  font-size: var(--text-lg);
+  line-height: 1.6;
+  color: #c4c4c4;
+  max-width: 420px;
+}
+
+.copyright {
+  position: relative;
+  margin: 0;
+  font-size: var(--text-xs);
+  color: #7a7a7a;
+}
+
+/* ---- Panel de formulario (derecha) ---- */
+.formPanel {
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: var(--surface);
+}
+
+.form {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.formHead h2 {
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.formHead p {
+  margin: 6px 0 0;
+  font-size: var(--text-sm);
+  color: var(--ink-subtle);
+}
+
+.submit { width: 100%; margin-top: var(--space-2); height: 44px; }
+
+.help {
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--ink-subtle);
+}
+.help a { color: var(--primary-hover); }
+
+@media (max-width: 900px) {
+  .wrap { grid-template-columns: 1fr; }
+  .brandPanel { display: none; }
+  .formPanel { min-height: 100vh; background: var(--bg); }
+}

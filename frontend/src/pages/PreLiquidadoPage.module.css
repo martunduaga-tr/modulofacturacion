@@ -1,0 +1,68 @@
+.barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  flex-wrap: wrap;
+}
+.periodo { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+.resumen {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  flex-wrap: wrap;
+}
+.resumen strong { color: var(--ink); font-weight: 600; }
+.porAprobar { color: var(--primary); font-weight: 500; }
+.anom { color: var(--warn); display: inline-flex; align-items: center; gap: 4px; }
+
+.aviso {
+  padding: var(--space-3) var(--space-4);
+  background: var(--primary-weak);
+  color: var(--primary);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-4);
+}
+
+.accionLote {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-sunken);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+}
+
+/* ---- Desglose ---- */
+.dHead { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); }
+
+.anomBox {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding: var(--space-3);
+  background: var(--warn-weak);
+  color: var(--warn);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-4);
+}
+
+.desglose { display: flex; flex-direction: column; gap: var(--space-1); }
+.dRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: var(--text-sm);
+}
+.dLabel { color: var(--ink-muted); }
+.dVal { font-variant-numeric: tabular-nums; color: var(--ink); }
+.dSep { height: 1px; background: var(--border); margin: var(--space-2) 0; }

@@ -1,0 +1,18 @@
+.cuerpo {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.icono {
+  flex-shrink: 0;
+  color: var(--danger);
+  margin-top: 2px;
+}
+
+.mensaje {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  line-height: var(--leading-body);
+}
+.mensaje strong { color: var(--ink); font-weight: 500; }

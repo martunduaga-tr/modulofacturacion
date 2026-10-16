@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.git/
+*.log
+# Se excluye el lockfile a proposito: fue generado en Windows y no incluye los
+# binarios nativos de Linux (@rolldown/binding-linux-x64-gnu de Vite 8). Sin
+# lockfile, Nixpacks usa `npm install`, que resuelve la dependencia opcional
+# correcta para la plataforma de build (Linux).
+package-lock.json
