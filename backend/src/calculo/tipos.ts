@@ -60,6 +60,21 @@ export interface ResultadoCalculo {
   rteiva: ComponenteTributario;
   autorretencion: ComponenteTributario; // informativa: NO se resta de la cartera
   valorCartera: number;
+  /** Valores tal como se imprimen en la factura electrónica (ver MotorCalculoService.calcular). */
+  factura: ValoresFactura;
+}
+
+/**
+ * La factura electrónica muestra subtotal e IVA en pesos enteros; las
+ * retenciones van con 2 decimales calculadas sobre los valores sin redondear
+ * a pesos (verificado contra las facturas de julio 2026, FE-24347..FE-24469).
+ */
+export interface ValoresFactura {
+  subtotal: number;
+  iva: number;
+  total: number;
+  /** total − RteFte − RteICA − RteIVA: lo que el cliente efectivamente paga. */
+  valorCartera: number;
 }
 
 export type CodigoErrorCalculo =
@@ -67,7 +82,8 @@ export type CodigoErrorCalculo =
   | 'SIN_ESCALON'
   | 'SIN_MINIMO'
   | 'SIN_TOPE_MINIMO'
-  | 'SIN_FIJO';
+  | 'SIN_FIJO'
+  | 'MODELO_SIN_COBRO_MENSUAL';
 
 /** Error de cálculo tipado: el motor nunca calcula un número silenciosamente mal. */
 export class ErrorCalculo extends Error {

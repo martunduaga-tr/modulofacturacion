@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Cliente } from '../../clientes/entities/cliente.entity';
+import { Cliente, SegmentoContrato } from '../../clientes/entities/cliente.entity';
 import { ContratoItem } from './contrato-item.entity';
 
 export type EstadoContrato = 'activo' | 'inactivo';
@@ -24,6 +24,10 @@ export class Contrato {
   @Column({ name: 'nombre_contrato', type: 'nvarchar', length: 255 })
   nombreContrato: string;
 
+  /** contrato_id del tarifario CSV de Contabilidad: re-importar actualiza en vez de duplicar. */
+  @Column({ name: 'codigo', type: 'nvarchar', length: 100, nullable: true })
+  codigo: string | null;
+
   @Column({ name: 'vigencia_desde', type: 'date', nullable: true })
   vigenciaDesde: string | null;
 
@@ -32,6 +36,10 @@ export class Contrato {
 
   @Column({ name: 'estado', type: 'nvarchar', length: 20, default: 'activo' })
   estado: EstadoContrato;
+
+  /** Express = suscripción anual de un servicio; corporativo = tarifario mensual. */
+  @Column({ name: 'segmento', type: 'nvarchar', length: 20, default: 'CORPORATIVO' })
+  segmento: SegmentoContrato;
 
   @Column({ name: 'observaciones', type: 'nvarchar', length: 'MAX', nullable: true })
   observaciones: string | null;

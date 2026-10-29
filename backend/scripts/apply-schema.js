@@ -37,6 +37,15 @@ const SCRIPTS_INCREMENTALES = [
   { archivo: '05_contratos_hibridos.sql', centinela: "OBJECT_ID('coe.contrato_item_conceptos')" },
   { archivo: '06_clientes_dv.sql', centinela: "COL_LENGTH('coe.clientes', 'dv')" },
   { archivo: '07_bolsa_mantenimiento.sql', centinela: "OBJECT_ID('coe.recargo_fijo')" },
+  { archivo: '08_empalme.sql', centinela: "OBJECT_ID('coe.empalme_pendientes')" },
+  { archivo: '09_express.sql', centinela: "OBJECT_ID('coe.express_consumos')" },
+  { archivo: '10_segmento_contrato.sql', centinela: "OBJECT_ID('coe.CK_clientes_segmento_v2')" },
+  { archivo: '11_volumen_diario.sql', centinela: "OBJECT_ID('coe.volumen_diario_periodos')" },
+  { archivo: '12_alertas_revision.sql', centinela: "OBJECT_ID('coe.alertas_revision')" },
+  { archivo: '13_comentarios_factura.sql', centinela: "OBJECT_ID('coe.cliente_comentarios_factura')" },
+  { archivo: '14_subservicios_hojas.sql', centinela: "OBJECT_ID('coe.CK_comentarios_factura_hoja')" },
+  { archivo: '15_moneda_trm.sql', centinela: "OBJECT_ID('coe.trm_diaria')" },
+  { archivo: '16_usuarios_clave.sql', centinela: "COL_LENGTH('coe.usuarios', 'debe_cambiar_clave')" },
 ];
 
 function baseConfig(database) {

@@ -1,3 +1,6 @@
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional } from 'class-validator';
+import type { Moneda } from '../entities/contrato-item.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { ArrayMinSize, IsArray, IsIn, ValidateNested } from 'class-validator';
@@ -24,6 +27,11 @@ export class CreateContratoItemDto {
     message: "modeloCobro debe ser 'volumen_escalonado', 'minimo_garantizado', 'fijo_mensual' o 'bolsa'",
   })
   modeloCobro: ModeloCobro;
+
+  @ApiPropertyOptional({ enum: ['COP', 'USD'], default: 'COP', description: 'Moneda de la tarifa. USD pasa a pesos con la TRM del día de la factura.' })
+  @IsOptional()
+  @IsIn(['COP', 'USD'], { message: "moneda debe ser 'COP' o 'USD'" })
+  moneda?: Moneda;
 
   @ApiProperty({ type: [TarifaAnioDto], description: 'Tarifas por año, coherentes con el modelo de cobro' })
   @IsArray()

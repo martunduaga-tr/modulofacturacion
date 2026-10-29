@@ -1,10 +1,13 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Put, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ClientesService } from './clientes.service';
 import { CreateClienteDto } from './dto/create-cliente.dto';
 import { UpdateClienteDto } from './dto/update-cliente.dto';
 import { ListClientesQueryDto } from './dto/list-clientes-query.dto';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { PerfilTributarioDto } from './dto/perfil-tributario.dto';
+import { ComentarioFacturaDto } from './dto/comentario-factura.dto';
 
 @ApiTags('Clientes')
 @Controller('clientes')
@@ -35,5 +38,25 @@ export class ClientesController {
   @ApiOperation({ summary: 'Editar un cliente (incl. baja lógica vía estado)' })
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateClienteDto) {
     return this.clientesService.update(id, dto);
+  }
+
+  @Patch(':id/perfil-tributario')
+  @Roles('administrador', 'editor')
+  @ApiOperation({ summary: 'Editar las retenciones del cliente (queda en auditoría)' })
+  perfilTributario(@Param('id', ParseIntPipe) id: number, @Body() dto: PerfilTributarioDto, @CurrentUser() usuario: string) {
+    return this.clientesService.actualizarPerfilTributario(id, dto, usuario);
+  }
+
+  @Get(':id/comentarios-factura')
+  @ApiOperation({ summary: 'Comentarios de la línea de factura del cliente, por clasificador' })
+  comentariosFactura(@Param('id', ParseIntPipe) id: number) {
+    return this.clientesService.comentariosFactura(id);
+  }
+
+  @Put(':id/comentarios-factura')
+  @Roles('administrador', 'editor')
+  @ApiOperation({ summary: 'Guardar el comentario de un clasificador (vacío = borrar; queda en auditoría)' })
+  guardarComentarioFactura(@Param('id', ParseIntPipe) id: number, @Body() dto: ComentarioFacturaDto, @CurrentUser() usuario: string) {
+    return this.clientesService.guardarComentarioFactura(id, dto, usuario);
   }
 }

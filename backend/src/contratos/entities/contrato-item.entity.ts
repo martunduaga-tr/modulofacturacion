@@ -15,8 +15,11 @@ import { MinimoGarantizado } from '../../tarifas/entities/minimo-garantizado.ent
 import { TarifaFija } from '../../tarifas/entities/tarifa-fija.entity';
 import { RecargoFijo } from '../../tarifas/entities/recargo-fijo.entity';
 
-export type ModeloCobro = 'volumen_escalonado' | 'minimo_garantizado' | 'fijo_mensual' | 'bolsa';
+/** plan_anual: suscripción Express; no se cobra por mes (ver express/). */
+export type ModeloCobro = 'volumen_escalonado' | 'minimo_garantizado' | 'fijo_mensual' | 'bolsa' | 'plan_anual';
 export type EstadoItem = 'activo' | 'inactivo';
+/** Moneda de la tarifa del ítem: la factura sale en COP con la TRM del día de emisión (15_moneda_trm.sql). */
+export type Moneda = 'COP' | 'USD';
 
 @Entity({ schema: 'coe', name: 'contrato_items' })
 export class ContratoItem {
@@ -31,6 +34,9 @@ export class ContratoItem {
 
   @Column({ name: 'estado', type: 'nvarchar', length: 20, default: 'activo' })
   estado: EstadoItem;
+
+  @Column({ name: 'moneda', type: 'nvarchar', length: 3, default: 'COP' })
+  moneda: Moneda;
 
   @CreateDateColumn({ name: 'fecha_creacion', type: 'datetime2' })
   fechaCreacion: Date;

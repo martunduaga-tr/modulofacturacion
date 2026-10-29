@@ -4,7 +4,7 @@ import type { AuthUser } from '../lib/types';
 
 const USER_KEY = 'coe.user';
 
-interface LoginResponse {
+export interface LoginResponse {
   accessToken: string;
   usuario: AuthUser;
 }
@@ -13,6 +13,8 @@ interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
   login: (username: string, password: string) => Promise<void>;
+  /** Guarda la sesión nueva que devuelve el cambio de clave. */
+  iniciarSesion: (res: LoginResponse) => void;
   logout: () => void;
 }
 
@@ -39,19 +41,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const onUnauthorized = () => logout();
+    // El administrador le restableció la clave mientras tenía la sesión abierta.
+    const onCambiarClave = () =>
+      setUser((u) => {
+        if (!u) return u;
+        const nuevo = { ...u, debeCambiarClave: true };
+        localStorage.setItem(USER_KEY, JSON.stringify(nuevo));
+        return nuevo;
+      });
     window.addEventListener('coe:unauthorized', onUnauthorized);
-    return () => window.removeEventListener('coe:unauthorized', onUnauthorized);
+    window.addEventListener('coe:cambiar-clave', onCambiarClave);
+    return () => {
+      window.removeEventListener('coe:unauthorized', onUnauthorized);
+      window.removeEventListener('coe:cambiar-clave', onCambiarClave);
+    };
   }, []);
 
-  const login = async (username: string, password: string) => {
-    const res = await api.post<LoginResponse>('/auth/login', { username, password });
+  const iniciarSesion = (res: LoginResponse) => {
     setToken(res.accessToken);
     localStorage.setItem(USER_KEY, JSON.stringify(res.usuario));
     setUser(res.usuario);
   };
 
+  const login = async (username: string, password: string) => {
+    iniciarSesion(await api.post<LoginResponse>('/auth/login', { username, password }));
+  };
+
   const value = useMemo(
-    () => ({ user, isAuthenticated: !!user, login, logout }),
+    () => ({ user, isAuthenticated: !!user, login, iniciarSesion, logout }),
     [user],
   );
 

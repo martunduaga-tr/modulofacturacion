@@ -4,6 +4,7 @@ export interface AuthUser {
   id: number;
   username: string;
   rol: string;
+  debeCambiarClave?: boolean;
 }
 
 /**

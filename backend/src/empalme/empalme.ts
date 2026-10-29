@@ -1,0 +1,186 @@
+import { MotorCalculoService } from '../calculo/motor-calculo.service';
+import { ErrorCalculo, ResultadoCalculo, TasasTributarias } from '../calculo/tipos';
+import type { ContratoTarifario, ItemTarifario } from './tarifario-csv';
+import { servicioDeLlave, type VolumenesPeriodo } from './volumenes-bigquery';
+
+/**
+ * Empalme Data ↔ Contabilidad para un periodo:
+ *   volumen (NIT + Servicio)  →  contrato vigente del NIT  →  item que cubre el servicio
+ *
+ * Subservicio: el volumen llega como "Servicio/SubServicio" cuando Data lo trae.
+ * Lo toma el item de ese subservicio (iDocumentos/ANI, con su propia tarifa) y,
+ * si el contrato no lo separa, el item del servicio completo (iDocumentos).
+ * y liquidación de cada item con el motor determinístico, con la tarifa del
+ * año del periodo.
+ *
+ * Todo volumen que no empalma sale en `noEmpalmados` con su motivo: nada se
+ * descarta en silencio. Un item con mínimo, fijo o recargo se liquida aunque
+ * el cliente no haya tenido volumen (el mínimo se cobra igual), con anomalía
+ * `volumen_cero` para que un humano lo mire.
+ */
+
+export type MotivoNoEmpalme =
+  | 'NIT_SIN_CONTRATO'
+  | 'CONTRATO_NO_VIGENTE'
+  | 'SERVICIO_SIN_TARIFA'
+  | 'SERVICIO_EN_VARIOS_CONTRATOS';
+
+export interface NoEmpalmado {
+  nit: string;
+  servicio: string;
+  cantidad: number;
+  motivo: MotivoNoEmpalme;
+}
+
+export interface Liquidacion {
+  nit: string;
+  razonSocial: string;
+  contratoId: string;
+  servicios: string[];
+  /** USD: `resultado` sale en dólares de liquidarPeriodo; EmpalmeService lo pasa a pesos y deja el USD en `usd`. */
+  moneda: 'COP' | 'USD';
+  usd?: { resultado: ResultadoCalculo; trm: number; fechaTrm: string };
+  volumenesOrigen: { servicio: string; cantidad: number }[];
+  resultado: ResultadoCalculo;
+  anomalias: string[];
+  /** Referencias a la base de datos (solo cuando los contratos vienen de ahí). */
+  clienteId?: number;
+  itemId?: number;
+}
+
+export interface ErrorLiquidacion {
+  nit: string;
+  contratoId: string;
+  servicios: string[];
+  motivo: string;
+  volumen: number;
+}
+
+/** Consumo del mes de una suscripción Express (plan_anual): no se cobra, se compara con el tope. */
+export interface ConsumoPlan {
+  nit: string;
+  contratoId: string;
+  servicios: string[];
+  cantidad: number;
+  itemId?: number;
+}
+
+export interface ResultadoEmpalme {
+  periodo: string;
+  liquidaciones: Liquidacion[];
+  noEmpalmados: NoEmpalmado[];
+  errores: ErrorLiquidacion[];
+  consumosPlan: ConsumoPlan[];
+}
+
+const NOMBRE_RETENCION = { rtefte: 'RteFte', rteiva: 'RteIVA', rteica: 'ReteICA' } as const;
+
+/** Tasas globales (parametros_globales); el perfil del contrato las reemplaza por cliente. */
+export type TasasBase = TasasTributarias;
+
+function vigenteEn(c: ContratoTarifario, periodo: string): boolean {
+  const inicioMes = `${periodo}-01`;
+  const finMes = `${periodo}-31`; // comparación de texto AAAA-MM-DD: basta para "algún día del mes"
+  return (c.vigenciaDesde == null || c.vigenciaDesde <= finMes) && (c.vigenciaHasta == null || c.vigenciaHasta >= inicioMes);
+}
+
+export function liquidarPeriodo(
+  contratos: ContratoTarifario[],
+  volumenes: VolumenesPeriodo,
+  tasasBase: TasasBase,
+  motor = new MotorCalculoService(),
+): ResultadoEmpalme {
+  const { periodo } = volumenes;
+  const anio = Number(periodo.slice(0, 4));
+  const res: ResultadoEmpalme = { periodo, liquidaciones: [], noEmpalmados: [], errores: [], consumosPlan: [] };
+
+  const porNit = new Map<string, ContratoTarifario[]>();
+  for (const c of contratos) porNit.set(c.nit, [...(porNit.get(c.nit) ?? []), c]);
+
+  // 1. Asignar cada volumen (NIT + servicio) a un item, o explicar por qué no.
+  const asignado = new Map<ItemTarifario, { servicio: string; cantidad: number }[]>();
+  for (const [nit, servicios] of volumenes.porNit) {
+    const delNit = porNit.get(nit) ?? [];
+    const vigentes = delNit.filter((c) => vigenteEn(c, periodo));
+    for (const [servicio, cantidad] of servicios) {
+      let motivo: MotivoNoEmpalme | null = null;
+      if (!delNit.length) motivo = 'NIT_SIN_CONTRATO';
+      else if (!vigentes.length) motivo = 'CONTRATO_NO_VIGENTE';
+      else {
+        const cubren = (llave: string) => vigentes.flatMap((c) => c.items.filter((i) => i.servicios.includes(llave)));
+        let items = cubren(servicio);
+        if (items.length === 0 && servicioDeLlave(servicio) !== servicio) items = cubren(servicioDeLlave(servicio));
+        // Un item por moneda: COP y USD del mismo servicio son dos cobros sobre las mismas transacciones.
+        const repetido = items.some((it, i) => items.findIndex((o) => o.moneda === it.moneda) !== i);
+        if (items.length === 0) motivo = 'SERVICIO_SIN_TARIFA';
+        else if (repetido) motivo = 'SERVICIO_EN_VARIOS_CONTRATOS';
+        else for (const it of items) asignado.set(it, [...(asignado.get(it) ?? []), { servicio, cantidad }]);
+      }
+      if (motivo) res.noEmpalmados.push({ nit, servicio, cantidad, motivo });
+    }
+  }
+
+  // 2. Liquidar cada item de los contratos vigentes con la tarifa del año del periodo.
+  for (const c of contratos.filter((x) => vigenteEn(x, periodo))) {
+    const tasas: TasasTributarias = {
+      ...tasasBase,
+      rtefte: c.perfil.rtefte ?? tasasBase.rtefte,
+      rteiva: c.perfil.rteiva ?? tasasBase.rteiva,
+      rteica: c.perfil.rteica ?? tasasBase.rteica,
+    };
+    // Sin las tres retenciones no se liquida: aplicar las globales a ciegas daría una factura equivocada.
+    const faltan = (['rtefte', 'rteiva', 'rteica'] as const).filter((t) => c.perfil[t] == null);
+    if (faltan.length) {
+      for (const item of c.items) {
+        const volumen = (asignado.get(item) ?? []).reduce((s, v) => s + v.cantidad, 0);
+        if (item.modeloCobro === 'plan_anual') continue;
+        res.errores.push({
+          nit: c.nit, contratoId: c.contratoId, servicios: item.servicios, volumen,
+          motivo: `SIN_RETENCIONES: falta ${faltan.map((t) => NOMBRE_RETENCION[t]).join(', ')} del cliente; complétela en su ficha de Clientes`,
+        });
+      }
+      continue;
+    }
+    for (const item of c.items) {
+      const origen = asignado.get(item) ?? [];
+      const volumen = origen.reduce((s, v) => s + v.cantidad, 0);
+      if (item.modeloCobro === 'plan_anual') {
+        // Express: el volumen empalma (no queda como "sin contrato") pero no se cobra por mes.
+        res.consumosPlan.push({ nit: c.nit, contratoId: c.contratoId, servicios: item.servicios, cantidad: volumen, itemId: item.itemId });
+        continue;
+      }
+      const tarifa = item.tarifasPorAnio[anio];
+      const error = (motivo: string) =>
+        res.errores.push({ nit: c.nit, contratoId: c.contratoId, servicios: item.servicios, motivo, volumen });
+
+      if (!tarifa) {
+        // Sin precios del año: si hubo consumo es plata que no se está cobrando.
+        if (volumen > 0) error(`SIN_TARIFA_ANIO: el item no tiene precios para ${anio}`);
+        continue;
+      }
+      const cobraSinVolumen =
+        item.modeloCobro === 'minimo_garantizado' || item.modeloCobro === 'fijo_mensual' || !!tarifa.recargoFijo;
+      if (volumen === 0 && !cobraSinVolumen) continue; // escala/bolsa sin consumo: no hay nada que cobrar
+
+      try {
+        const resultado = motor.calcular({ modeloCobro: item.modeloCobro, volumen, anioTarifa: anio, tarifa, tasas });
+        res.liquidaciones.push({
+          nit: c.nit,
+          razonSocial: c.razonSocial,
+          contratoId: c.contratoId,
+          servicios: item.servicios,
+          moneda: item.moneda ?? 'COP',
+          volumenesOrigen: origen,
+          resultado,
+          anomalias: volumen === 0 ? ['volumen_cero'] : [],
+          clienteId: c.clienteId,
+          itemId: item.itemId,
+        });
+      } catch (e) {
+        error(e instanceof ErrorCalculo ? `${e.codigo}: ${e.message}` : (e as Error).message);
+      }
+    }
+  }
+
+  return res;
+}

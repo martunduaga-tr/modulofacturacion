@@ -1,3 +1,4 @@
+import { MonedaItemDto } from './dto/moneda-item.dto';
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ContratosService } from './contratos.service';
@@ -40,5 +41,12 @@ export class ContratosController {
     @CurrentUser() usuario: string,
   ) {
     return this.contratosService.update(id, dto, usuario);
+  }
+
+  @Patch('items/:itemId/moneda')
+  @Roles('administrador', 'editor')
+  @ApiOperation({ summary: 'Moneda de la tarifa del item: COP (por defecto) o USD (queda en auditoría)' })
+  cambiarMoneda(@Param('itemId', ParseIntPipe) itemId: number, @Body() dto: MonedaItemDto, @CurrentUser() usuario: string) {
+    return this.contratosService.cambiarMoneda(itemId, dto.moneda, usuario);
   }
 }

@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { Link, NavLink, Outlet } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   FileText,
   ClipboardList,
   Calculator,
+  ArrowLeftRight,
+  CalendarClock,
   Package,
   SlidersHorizontal,
   History,
@@ -12,6 +14,7 @@ import {
   Building2,
   GitMerge,
   Bell,
+  KeyRound,
   LogOut,
   Menu,
   ChevronLeft,
@@ -35,6 +38,8 @@ const NAV: NavDef[] = [
   { to: '/contratos', label: 'Contratos', icon: FileText },
   { to: '/clientes', label: 'Clientes', icon: Building2 },
   { to: '/facturacion', label: 'Facturación', icon: ClipboardList },
+  { to: '/empalme', label: 'Empalme', icon: ArrowLeftRight },
+  { to: '/express', label: 'Express', icon: CalendarClock },
   { to: '/pre-liquidado', label: 'Pre-liquidado', icon: Calculator },
   { to: '/productos', label: 'Productos', icon: Package },
   { to: '/parametros', label: 'Parámetros', icon: SlidersHorizontal },
@@ -140,6 +145,9 @@ export function AppShell() {
             <div className={styles.avatar} aria-hidden>
               {user ? iniciales(user.nombre) : '?'}
             </div>
+            <Link to="/cambiar-clave" className="btn btn-ghost btn-icon" aria-label="Cambiar mi clave" title="Cambiar mi clave">
+              <KeyRound size={18} />
+            </Link>
             <button className="btn btn-ghost btn-icon" onClick={logout} aria-label="Cerrar sesión" title="Cerrar sesión">
               <LogOut size={18} />
             </button>

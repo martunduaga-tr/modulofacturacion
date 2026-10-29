@@ -51,7 +51,10 @@ export function AuditoriaPage() {
       <div style={{ display: 'flex', gap: 'var(--space-3)', marginBottom: 'var(--space-4)', flexWrap: 'wrap' }}>
         <select className="select" style={{ width: 'auto', minWidth: 180 }} value={tabla} onChange={(e) => { setTabla(e.target.value); setPage(1); }}>
           <option value="">Todas las tablas</option>
+          <option value="pre_liquidados">pre_liquidados</option>
+          <option value="clientes">clientes</option>
           <option value="contratos">contratos</option>
+          <option value="contrato_items">contrato_items</option>
           <option value="tarifa_escalones">tarifa_escalones</option>
           <option value="minimo_garantizado">minimo_garantizado</option>
           <option value="tarifa_fija">tarifa_fija</option>

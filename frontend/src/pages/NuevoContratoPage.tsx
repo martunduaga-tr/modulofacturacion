@@ -37,6 +37,7 @@ export interface FormContrato {
   nuevoRazon: string;
   nuevoCorreo: string;
   nombreContrato: string;
+  codigo: string;
   vigenciaDesde: string;
   vigenciaHasta: string;
   items: ItemForm[];
@@ -69,6 +70,7 @@ export function NuevoContratoPage() {
       nuevoRazon: '',
       nuevoCorreo: '',
       nombreContrato: '',
+      codigo: '',
       vigenciaDesde: '',
       vigenciaHasta: '',
       items: [itemVacio()],
@@ -93,6 +95,7 @@ export function NuevoContratoPage() {
       if (!values.nuevoRazon.trim()) errs.push('La razón social del cliente nuevo es obligatoria.');
     }
     if (!values.nombreContrato.trim()) errs.push('El nombre del contrato es obligatorio.');
+    if (!values.codigo.trim()) errs.push('El código del contrato es obligatorio.');
 
     values.items.forEach((it, i) => {
       it.conceptos.forEach((c, j) => {
@@ -159,6 +162,7 @@ export function NuevoContratoPage() {
       const contrato = await api.post<Contrato>('/contratos', {
         clienteId,
         nombreContrato: values.nombreContrato.trim(),
+        codigo: values.codigo.trim(),
         vigenciaDesde: values.vigenciaDesde || undefined,
         vigenciaHasta: values.vigenciaHasta || undefined,
         items: values.items.map((it) => ({
@@ -245,6 +249,11 @@ export function NuevoContratoPage() {
         )}
 
         <div className={styles.grid3} style={{ marginTop: 'var(--space-4)' }}>
+          <div className="field">
+            <label className="field-label">Código del contrato</label>
+            <input className="input" {...register('codigo')} placeholder="900188916-FACTURA-2026" />
+            <span className="field-hint">El mismo del maestro de Contabilidad (contrato_id). Solo corporativos; los Express se crean en la pantalla Express.</span>
+          </div>
           <div className="field">
             <label className="field-label">Nombre del contrato</label>
             <input className="input" {...register('nombreContrato')} placeholder="Otro Sí No.1 SG-001" />

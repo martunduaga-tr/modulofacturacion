@@ -1,3 +1,4 @@
+import { textoRetenciones, textoSegmento } from '../lib/format';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
@@ -94,6 +95,8 @@ export function ClientesPage() {
                 <tr>
                   <th>Cliente</th>
                   <th>Estado</th>
+                  <th>Segmento</th>
+                  <th>Retenciones</th>
                   <th className="right">Contratos</th>
                 </tr>
               </thead>
@@ -114,6 +117,10 @@ export function ClientesPage() {
                     </td>
                     <td>
                       <EstadoBadge estado={c.estado} />
+                    </td>
+                    <td>{textoSegmento(c.segmento)}</td>
+                    <td style={{ fontSize: 'var(--text-sm)' }}>
+                      {textoRetenciones(c) ?? <span className="badge badge-warn">Pendientes</span>}
                     </td>
                     <td className="right num">{c.contratosCount ?? 0}</td>
                   </tr>

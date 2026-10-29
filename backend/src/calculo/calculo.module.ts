@@ -13,15 +13,19 @@ import { PreLiquidadoController } from './pre-liquidado.controller';
 import { MotorCalculoService } from './motor-calculo.service';
 import { TarifasModule } from '../tarifas/tarifas.module';
 import { ParametrosModule } from '../parametros/parametros.module';
+import { AuditoriaModule } from '../auditoria/auditoria.module';
+import { ComentarioFactura } from '../clientes/entities/comentario-factura.entity';
+import { ExportarCobrosService } from './exportar-cobros.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Volumen, PreLiquidado, Cliente, Producto, ConceptoFacturable, ContratoItem]),
+    TypeOrmModule.forFeature([Volumen, PreLiquidado, Cliente, Producto, ConceptoFacturable, ContratoItem, ComentarioFactura]),
     TarifasModule,
     ParametrosModule,
+    AuditoriaModule,
   ],
   controllers: [VolumenesController, PreLiquidadoController],
-  providers: [VolumenesService, PreLiquidadoService, MotorCalculoService],
+  providers: [VolumenesService, PreLiquidadoService, MotorCalculoService, ExportarCobrosService],
   exports: [MotorCalculoService, VolumenesService, PreLiquidadoService],
 })
 export class CalculoModule {}

@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Pencil } from 'lucide-react';
 import { api, ApiError } from '../lib/api';
-import type { Contrato, ContratoItem } from '../lib/types';
+import type { Contrato, ContratoItem, Moneda } from '../lib/types';
 import { rangoVigencia, formatearNumero } from '../lib/format';
 import { EstadoBadge, ModeloBadge } from '../components/ui/Badges';
 import { Money } from '../components/ui/Money';
@@ -62,6 +62,10 @@ export function ContratoFichaPage() {
             <div className={styles.metaItem}>
               <span className={styles.metaLabel}>Contrato</span>
               <span className={styles.metaValue}>{contrato.nombreContrato}</span>
+            </div>
+            <div className={styles.metaItem}>
+              <span className={styles.metaLabel}>Código</span>
+              <span className={`${styles.metaValue} mono`}>{contrato.codigo ?? '—'}</span>
             </div>
             <div className={styles.metaItem}>
               <span className={styles.metaLabel}>Vigencia</span>
@@ -202,22 +206,34 @@ function EditarCabecera({ contrato, onClose }: { contrato: Contrato; onClose: ()
 function ItemCard({ item, contratoId, puedeEditar }: { item: ContratoItem; contratoId: number; puedeEditar: boolean }) {
   const anios = useMemo(() => {
     const set = new Set<number>();
-    item.escalones.forEach((e) => set.add(e.anio));
-    item.minimos.forEach((m) => set.add(m.anio));
-    item.tarifasFijas.forEach((f) => set.add(f.anio));
-    item.recargos.forEach((r) => set.add(r.anio));
+    (item.escalones ?? []).forEach((e) => set.add(e.anio));
+    (item.minimos ?? []).forEach((m) => set.add(m.anio));
+    (item.tarifasFijas ?? []).forEach((f) => set.add(f.anio));
+    (item.recargos ?? []).forEach((r) => set.add(r.anio));
     return Array.from(set).sort((a, b) => b - a);
   }, [item]);
 
   const [anio, setAnio] = useState<number>(anios[0]);
   const [modal, setModal] = useState<{ anioEditar?: number } | null>(null);
+  const [nuevaMoneda, setNuevaMoneda] = useState<Moneda | null>(null);
+  const qc = useQueryClient();
+  const toast = useToast();
+  const cambiarMoneda = useMutation({
+    mutationFn: (moneda: Moneda) => api.patch(`/contratos/items/${item.id}/moneda`, { moneda }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['contrato', String(contratoId)] });
+      toast.exito(`Tarifa en ${nuevaMoneda}. Aplica desde la próxima liquidación.`);
+      setNuevaMoneda(null);
+    },
+    onError: (e) => toast.error(e instanceof ApiError ? e.message : 'No se pudo cambiar la moneda'),
+  });
 
   const escalones = item.escalones
     .filter((e) => e.anio === anio)
     .sort((a, b) => a.volumenDesde - b.volumenDesde);
   const minimo = item.minimos.find((m) => m.anio === anio);
   const fija = item.tarifasFijas.find((f) => f.anio === anio);
-  const recargos = item.recargos.filter((r) => r.anio === anio);
+  const recargos = (item.recargos ?? []).filter((r) => r.anio === anio);
 
   return (
     <div className={`card ${styles.item}`}>
@@ -231,6 +247,21 @@ function ItemCard({ item, contratoId, puedeEditar }: { item: ContratoItem; contr
           ))}
         </span>
         <ModeloBadge modelo={item.modeloCobro} />
+        {puedeEditar ? (
+          <select
+            className="select"
+            style={{ width: 'auto', height: 32 }}
+            value={item.moneda ?? 'COP'}
+            onChange={(e) => setNuevaMoneda(e.target.value as Moneda)}
+            aria-label="Moneda de la tarifa"
+            title="Moneda de la tarifa: USD se pasa a pesos con la TRM del día de la factura"
+          >
+            <option value="COP">COP</option>
+            <option value="USD">USD</option>
+          </select>
+        ) : (
+          item.moneda === 'USD' && <span className="badge badge-plain badge-accent">USD</span>
+        )}
         <div className={styles.spacer} />
         {anios.length > 0 && (
           <div className={styles.yearRow}>
@@ -291,7 +322,7 @@ function ItemCard({ item, contratoId, puedeEditar }: { item: ContratoItem; contr
               {escalones.map((e) => (
                 <tr key={e.id}>
                   <td className="num">{formatearNumero(e.volumenDesde)}</td>
-                  <td className="num">{formatearNumero(e.volumenHasta)}</td>
+                  <td className="num">{e.volumenHasta == null || e.volumenHasta >= Number.MAX_SAFE_INTEGER ? 'En adelante' : formatearNumero(e.volumenHasta)}</td>
                   <td className="right">
                     <Money valor={e.precioUnitario} decimales={2} />
                   </td>
@@ -317,6 +348,20 @@ function ItemCard({ item, contratoId, puedeEditar }: { item: ContratoItem; contr
         </div>
       )}
 
+      {nuevaMoneda && (
+        <ConfirmDialog
+          titulo={`Tarifa en ${nuevaMoneda}`}
+          mensaje={
+            nuevaMoneda === 'USD'
+              ? 'Los valores de esta tarifa se tomarán como dólares y el cobro se pasará a pesos con la TRM del día de la factura.'
+              : 'Los valores de esta tarifa se tomarán como pesos colombianos.'
+          }
+          confirmarLabel={`Pasar a ${nuevaMoneda}`}
+          confirmando={cambiarMoneda.isPending}
+          onConfirmar={() => cambiarMoneda.mutate(nuevaMoneda)}
+          onCancelar={() => setNuevaMoneda(null)}
+        />
+      )}
       {modal && (
         <TarifaAnioModal
           item={item}

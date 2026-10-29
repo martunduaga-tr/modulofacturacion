@@ -44,6 +44,11 @@ export class MotorCalculoService {
     volumen: number,
     tarifa: TarifaEntrada,
   ): { subtotal: Decimal; escalonUsado: EscalonTarifa | null; tarifaUnitaria: Decimal | null } {
+    if (modelo === 'plan_anual') {
+      // Express: el plan se cobra solo por solicitud aprobada (renovación), nunca por volumen del mes.
+      throw new ErrorCalculo('MODELO_SIN_COBRO_MENSUAL', 'El plan anual Express no se liquida por mes.');
+    }
+
     if (modelo === 'fijo_mensual') {
       if (tarifa.valorFijo == null) {
         throw new ErrorCalculo('SIN_FIJO', 'El item es fijo_mensual pero no tiene valor fijo para el año.');
@@ -53,6 +58,12 @@ export class MotorCalculoService {
 
     if (modelo === 'minimo_garantizado') {
       return this.calcularMinimoGarantizado(volumen, tarifa);
+    }
+
+    if (modelo === 'volumen_escalonado' && volumen === 0) {
+      // Sin transacciones no hay nada que multiplicar (0 × cualquier tarifa = 0). Llega aquí cuando el
+      // item tiene un recargo fijo (ej. mantenimiento de SAN CARLOS), que se cobra aunque no haya volumen.
+      return { subtotal: new Decimal(0), escalonUsado: null, tarifaUnitaria: null };
     }
 
     const escalon = this.seleccionarEscalon(volumen, tarifa.escalones);
@@ -150,6 +161,12 @@ export class MotorCalculoService {
 
     const valorCartera = this.redondear(total.sub(rtefte).sub(rteica).sub(rteiva));
 
+    // Factura electrónica: subtotal e IVA en pesos enteros; las retenciones de
+    // arriba (sobre los valores a 2 decimales) son las que imprime la factura.
+    const subtotalFactura = subtotal.toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
+    const ivaFactura = iva.toDecimalPlaces(0, Decimal.ROUND_HALF_UP);
+    const totalFactura = subtotalFactura.add(ivaFactura);
+
     return {
       modeloCobro: entrada.modeloCobro,
       volumen: entrada.volumen,
@@ -165,6 +182,12 @@ export class MotorCalculoService {
       rteiva: { tasa: t.rteiva, base: iva.toNumber(), valor: rteiva.toNumber() },
       autorretencion: { tasa: t.autorretencion, base: subtotal.toNumber(), valor: autorretencion.toNumber() },
       valorCartera: valorCartera.toNumber(),
+      factura: {
+        subtotal: subtotalFactura.toNumber(),
+        iva: ivaFactura.toNumber(),
+        total: totalFactura.toNumber(),
+        valorCartera: this.redondear(totalFactura.sub(rtefte).sub(rteica).sub(rteiva)).toNumber(),
+      },
     };
   }
 }

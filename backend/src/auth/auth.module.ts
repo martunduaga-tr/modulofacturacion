@@ -12,10 +12,12 @@ import { UsuariosController } from './usuarios.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
+import { AuditoriaModule } from '../auditoria/auditoria.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Usuario]),
+    AuditoriaModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],

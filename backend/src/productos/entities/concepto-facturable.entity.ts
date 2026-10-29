@@ -25,6 +25,10 @@ export class ConceptoFacturable {
   @Column({ name: 'nombre', type: 'nvarchar', length: 150 })
   nombre: string;
 
+  /** Nombre del servicio tal como lo reporta Data (BigQuery): llave del empalme. */
+  @Column({ name: 'codigo_data', type: 'nvarchar', length: 100, nullable: true })
+  codigoData: string | null;
+
   @Column({ name: 'estado', type: 'nvarchar', length: 20, default: 'activo' })
   estado: EstadoConcepto;
 

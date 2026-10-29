@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   ArrayMinSize,
   IsArray,
@@ -25,6 +25,18 @@ export class CreateContratoDto {
   @IsNotEmpty({ message: 'El nombre del contrato es obligatorio' })
   @MaxLength(255)
   nombreContrato: string;
+
+  /**
+   * Número del contrato corporativo firmado. Es la llave con la que la carga del
+   * maestro (contrato_id) reconoce el contrato: sin él, cargar el maestro crearía
+   * uno duplicado. Los Express no pasan por aquí (su llave la genera el sistema).
+   */
+  @ApiProperty({ example: '900188916-FACTURA-2026' })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString({ message: 'El código del contrato es obligatorio' })
+  @IsNotEmpty({ message: 'El código del contrato es obligatorio' })
+  @MaxLength(100, { message: 'El código del contrato admite máximo 100 caracteres' })
+  codigo: string;
 
   @ApiPropertyOptional({ example: '2026-01-01' })
   @IsOptional()

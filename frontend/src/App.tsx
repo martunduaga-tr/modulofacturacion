@@ -16,11 +16,22 @@ import { AuditoriaPage } from './pages/AuditoriaPage';
 import { UsuariosPage } from './pages/UsuariosPage';
 import { ReconciliacionPage } from './pages/ReconciliacionPage';
 import { AlertasPage } from './pages/AlertasPage';
+import { EmpalmePage } from './pages/EmpalmePage';
+import { ExpressPage } from './pages/ExpressPage';
+import { CambiarClavePage } from './pages/CambiarClavePage';
 
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/cambiar-clave"
+        element={
+          <ProtectedRoute>
+            <CambiarClavePage />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         element={
@@ -37,6 +48,8 @@ export default function App() {
         <Route path="/contratos/nuevo" element={<NuevoContratoPage />} />
         <Route path="/contratos/:id" element={<ContratoFichaPage />} />
         <Route path="/facturacion" element={<FacturacionPage />} />
+        <Route path="/empalme" element={<EmpalmePage />} />
+        <Route path="/express" element={<ExpressPage />} />
         <Route path="/pre-liquidado" element={<PreLiquidadoPage />} />
         <Route path="/productos" element={<ProductosPage />} />
         <Route path="/productos/:id" element={<ProductoDetallePage />} />

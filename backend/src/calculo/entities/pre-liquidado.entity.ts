@@ -103,6 +103,48 @@ export class PreLiquidado {
   @Column({ name: 'fecha_aprobacion', type: 'datetime2', nullable: true })
   fechaAprobacion: Date | null;
 
+  // Valores como los imprime la factura electrónica (pesos enteros).
+  @Column({ name: 'subtotal_factura', ...dec, precision: 18, scale: 2, nullable: true })
+  subtotalFactura: number | null;
+
+  @Column({ name: 'iva_factura', ...dec, precision: 18, scale: 2, nullable: true })
+  ivaFactura: number | null;
+
+  @Column({ name: 'total_factura', ...dec, precision: 18, scale: 2, nullable: true })
+  totalFactura: number | null;
+
+  // Tarifa en USD (15_moneda_trm.sql): los valores de arriba quedan en pesos con `trm`.
+  // Antes de facturar son un estimado (trm_definitiva = false); al facturar se fijan con la TRM de fecha_factura.
+  @Column({ name: 'moneda', type: 'nvarchar', length: 3, default: 'COP' })
+  moneda: 'COP' | 'USD';
+
+  @Column({ name: 'subtotal_moneda', ...dec, precision: 18, scale: 2, nullable: true })
+  subtotalMoneda: number | null;
+
+  @Column({ name: 'trm', ...dec, precision: 18, scale: 6, nullable: true })
+  trm: number | null;
+
+  @Column({ name: 'fecha_trm', type: 'date', nullable: true })
+  fechaTrm: string | null;
+
+  @Column({ name: 'trm_definitiva', type: 'bit', default: false })
+  trmDefinitiva: boolean;
+
+  @Column({ name: 'fecha_factura', type: 'date', nullable: true })
+  fechaFactura: string | null;
+
+  @Column({ name: 'usuario_facturo', type: 'nvarchar', length: 100, nullable: true })
+  usuarioFacturo: string | null;
+
+  @Column({ name: 'usuario_rechazo', type: 'nvarchar', length: 100, nullable: true })
+  usuarioRechazo: string | null;
+
+  @Column({ name: 'fecha_rechazo', type: 'datetime2', nullable: true })
+  fechaRechazo: Date | null;
+
+  @Column({ name: 'motivo_rechazo', type: 'nvarchar', length: 500, nullable: true })
+  motivoRechazo: string | null;
+
   @CreateDateColumn({ name: 'fecha_creacion', type: 'datetime2' })
   fechaCreacion: Date;
 

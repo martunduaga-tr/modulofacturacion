@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
-export type RolUsuario = 'administrador' | 'editor' | 'lector';
+export type RolUsuario = 'administrador' | 'editor' | 'lector' | 'comercial';
 export type EstadoUsuario = 'activo' | 'inactivo';
 
 @Entity({ schema: 'coe', name: 'usuarios' })
@@ -25,6 +25,10 @@ export class Usuario {
 
   @Column({ name: 'estado', type: 'nvarchar', length: 20, default: 'activo' })
   estado: EstadoUsuario;
+
+  /** Clave temporal (puesta por el administrador): la app solo deja cambiarla. */
+  @Column({ name: 'debe_cambiar_clave', type: 'bit', default: false })
+  debeCambiarClave: boolean;
 
   @CreateDateColumn({ name: 'fecha_creacion', type: 'datetime2' })
   fechaCreacion: Date;

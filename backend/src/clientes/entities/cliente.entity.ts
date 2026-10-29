@@ -7,8 +7,13 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Contrato } from '../../contratos/entities/contrato.entity';
+import { numericTransformer } from '../../common/transformers/numeric.transformer';
 
 export type EstadoCliente = 'activo' | 'retirado';
+export type SegmentoContrato = 'CORPORATIVO' | 'EXPRESS';
+/** Resumen de los contratos del cliente (10_segmento_contrato.sql): ALKA MOTOR tiene de los dos. */
+export type SegmentoCliente = SegmentoContrato | 'AMBOS';
+
 
 @Entity({ schema: 'coe', name: 'clientes' })
 export class Cliente {
@@ -32,6 +37,19 @@ export class Cliente {
 
   @Column({ name: 'observaciones', type: 'nvarchar', length: 'MAX', nullable: true })
   observaciones: string | null;
+
+  @Column({ name: 'segmento', type: 'nvarchar', length: 20, default: 'CORPORATIVO' })
+  segmento: SegmentoCliente;
+
+  // Perfil tributario (08_empalme.sql). NULL = la tasa global de parametros_globales.
+  @Column({ name: 'tasa_rtefte', type: 'decimal', precision: 9, scale: 6, nullable: true, transformer: numericTransformer })
+  tasaRtefte: number | null;
+
+  @Column({ name: 'tasa_rteiva', type: 'decimal', precision: 9, scale: 6, nullable: true, transformer: numericTransformer })
+  tasaRteiva: number | null;
+
+  @Column({ name: 'tasa_rteica', type: 'decimal', precision: 9, scale: 6, nullable: true, transformer: numericTransformer })
+  tasaRteica: number | null;
 
   @CreateDateColumn({ name: 'fecha_creacion', type: 'datetime2' })
   fechaCreacion: Date;

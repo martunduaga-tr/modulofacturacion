@@ -1,14 +1,16 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Contrato } from './entities/contrato.entity';
-import { ContratoItem } from './entities/contrato-item.entity';
+import { ContratoItem, Moneda } from './entities/contrato-item.entity';
 import { ContratoItemConcepto } from './entities/contrato-item-concepto.entity';
 import { Cliente } from '../clientes/entities/cliente.entity';
+import { recalcularSegmentoCliente } from '../clientes/segmento';
 import { Producto } from '../productos/entities/producto.entity';
 import { ConceptoFacturable } from '../productos/entities/concepto-facturable.entity';
 import { AuditoriaCambio } from '../auditoria/entities/auditoria-cambio.entity';
@@ -93,6 +95,7 @@ export class ContratosService {
           escalones: true,
           minimos: true,
           tarifasFijas: true,
+          recargos: true,
         },
       },
     });
@@ -110,6 +113,8 @@ export class ContratosService {
       const contrato = manager.getRepository(Contrato).create({
         clienteId: dto.clienteId,
         nombreContrato: dto.nombreContrato,
+        codigo: dto.codigo,
+        segmento: 'CORPORATIVO',
         vigenciaDesde: dto.vigenciaDesde ?? null,
         vigenciaHasta: dto.vigenciaHasta ?? null,
         estado: dto.estado ?? 'activo',
@@ -117,11 +122,13 @@ export class ContratosService {
       });
       const guardado = await manager.getRepository(Contrato).save(contrato);
       contratoId = guardado.id;
+      await recalcularSegmentoCliente(manager, dto.clienteId);
 
       for (const itemDto of dto.items) {
         const item = manager.getRepository(ContratoItem).create({
           contratoId: guardado.id,
           modeloCobro: itemDto.modeloCobro,
+          moneda: itemDto.moneda ?? 'COP',
         });
         const itemGuardado = await manager.getRepository(ContratoItem).save(item);
         for (const c of itemDto.conceptos) {
@@ -147,6 +154,7 @@ export class ContratosService {
           valorNuevo: {
             clienteId: dto.clienteId,
             nombreContrato: dto.nombreContrato,
+            codigo: dto.codigo,
             items: dto.items.length,
           },
         },
@@ -179,6 +187,7 @@ export class ContratosService {
       throw new BadRequestException('vigenciaDesde no puede ser posterior a vigenciaHasta');
     }
     const guardado = await this.contratosRepo.save(contrato);
+    if (anterior.estado !== guardado.estado) await recalcularSegmentoCliente(this.dataSource.manager, guardado.clienteId);
 
     await this.auditoria.registrar({
       tabla: 'contratos',
@@ -197,6 +206,13 @@ export class ContratosService {
     const cliente = await this.clientesRepo.findOne({ where: { id: dto.clienteId } });
     if (!cliente) {
       throw new BadRequestException(`No existe el cliente con id ${dto.clienteId}`);
+    }
+    const mismoCodigo = await this.contratosRepo.findOne({ where: { codigo: dto.codigo }, relations: { cliente: true } });
+    if (mismoCodigo) {
+      throw new ConflictException(
+        `Ya existe el contrato ${dto.codigo} (${mismoCodigo.cliente?.razonSocial ?? 'cliente ' + mismoCodigo.clienteId}). ` +
+          'Ábralo desde Contratos en vez de crear otro.',
+      );
     }
 
     // Dedup dentro del propio contrato: el mismo par producto+concepto no puede
@@ -255,5 +271,29 @@ export class ContratosService {
       }
     }
     this.tarifasValidation.validarTarifas(item.modeloCobro, item.tarifas);
+  }
+
+  /**
+   * Cambia la moneda de la tarifa de un item (COP por defecto, USD a mano).
+   * No puede quedar el mismo servicio dos veces en la misma moneda dentro del contrato.
+   */
+  async cambiarMoneda(itemId: number, moneda: Moneda, usuario: string): Promise<ContratoItem> {
+    const repo = this.dataSource.getRepository(ContratoItem);
+    const item = await repo.findOne({ where: { id: itemId }, relations: { conceptos: true } });
+    if (!item) throw new NotFoundException(`No existe el item ${itemId}`);
+    if (item.moneda === moneda) return item;
+    const clave = (i: ContratoItem) => i.conceptos.map((c) => `${c.productoId}:${c.conceptoId}`).sort().join('|');
+    const otros = await repo.find({ where: { contratoId: item.contratoId, estado: 'activo' }, relations: { conceptos: true } });
+    if (otros.some((o) => o.id !== item.id && o.moneda === moneda && clave(o) === clave(item))) {
+      throw new ConflictException(`El contrato ya tiene este servicio en ${moneda}: no puede quedar dos veces en la misma moneda.`);
+    }
+    const anterior = item.moneda;
+    item.moneda = moneda;
+    const guardado = await repo.save(item);
+    await this.auditoria.registrar({
+      tabla: 'contrato_items', registroId: itemId, usuario, accion: 'UPDATE',
+      valorAnterior: { moneda: anterior }, valorNuevo: { moneda },
+    });
+    return guardado;
   }
 }

@@ -32,9 +32,9 @@ export class CreateUsuarioDto {
   @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres' })
   password: string;
 
-  @ApiProperty({ enum: ['administrador', 'editor', 'lector'] })
-  @IsIn(['administrador', 'editor', 'lector'], {
-    message: "rol debe ser 'administrador', 'editor' o 'lector'",
+  @ApiProperty({ enum: ['administrador', 'editor', 'lector', 'comercial'] })
+  @IsIn(['administrador', 'editor', 'lector', 'comercial'], {
+    message: "rol debe ser 'administrador', 'editor', 'lector' o 'comercial'",
   })
-  rol: 'administrador' | 'editor' | 'lector';
+  rol: 'administrador' | 'editor' | 'lector' | 'comercial';
 }

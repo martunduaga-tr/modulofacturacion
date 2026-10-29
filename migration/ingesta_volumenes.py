@@ -5,7 +5,8 @@ Flujo (todo automatico, sin pasos manuales):
   1. Lee produccion del periodo desde un CSV exportado de BigQuery (--produccion).
      La lectura directa de BigQuery NO esta escrita aun; cuando haya acceso se agrega
      como otra fuente que devuelva las mismas columnas que el CSV.
-  2. Quita filas exactamente duplicadas (--no-dedup para conservarlas).
+  2. CONSERVA las filas exactamente duplicadas: Data confirmo que son documentos
+     distintos (Validacion_Consulta_Data_Julio2026.docx). --dedup solo para analisis.
   3. Mapea Servicio -> (producto, concepto) con MAPEO_SERVICIOS. Lo que no tiene
      mapeo NO se inventa: se reporta como SIN_CATALOGO.
   4. Hace match de cada NIT con los maestros de Contabilidad (DATACLIENTES y las hojas
@@ -125,7 +126,8 @@ def main():
     ap.add_argument("--produccion", required=True, help="CSV de BigQuery")
     ap.add_argument("--carpeta-contratos", required=True)
     ap.add_argument("--excluir", default=",".join(sorted(EXCLUIR_DEFAULT)))
-    ap.add_argument("--no-dedup", action="store_true", help="conservar filas exactamente repetidas")
+    ap.add_argument("--dedup", action="store_true",
+                    help="quitar filas exactamente repetidas (NO para cobrar: son documentos distintos)")
     ap.add_argument("--salida", default=None)
     ap.add_argument("--enviar", action="store_true", help="cargar a la API (requiere backend corriendo)")
     ap.add_argument("--api", default="http://localhost:3000/api")
@@ -138,7 +140,7 @@ def main():
 
     prod = leer_produccion(args.produccion, args.periodo)
     total_filas = len(prod)
-    prod = aplicar_dedup(prod, dedup=not args.no_dedup)
+    prod = aplicar_dedup(prod, dedup=args.dedup)
     maestro, _, _, _ = leer_maestros(args.carpeta_contratos)
     payload, reporte = construir_payload(prod, maestro, excluir, anio, mes)
     errores = validar_payload(payload)

@@ -1,0 +1,93 @@
+.pasos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+.pasos > section { padding: var(--space-5); }
+@media (max-width: 520px) {
+  .pasos { grid-template-columns: 1fr; }
+}
+
+.paso {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  margin: 0 0 var(--space-2);
+}
+
+.ayuda {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin: 0 0 var(--space-4);
+}
+
+.accion {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  align-items: center;
+}
+.accion :global(.input) { flex: 1 1 220px; min-width: 0; }
+
+.cifras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin: var(--space-4) 0 var(--space-3);
+}
+.cifras strong { color: var(--ink); font-weight: 600; }
+.malo strong { color: var(--danger); }
+
+.aviso {
+  display: flex;
+  gap: var(--space-2);
+  align-items: flex-start;
+  padding: var(--space-3);
+  background: var(--warn-weak);
+  color: var(--warn);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-3);
+}
+.aviso ul { margin: var(--space-1) 0 0; padding-left: var(--space-5); }
+.aviso svg { flex-shrink: 0; margin-top: 2px; }
+
+.ir { margin-top: var(--space-1); }
+
+.nota {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin: var(--space-3) 0 0;
+}
+
+.respaldo {
+  margin-top: var(--space-4);
+  font-size: var(--text-sm);
+}
+.respaldo summary {
+  cursor: pointer;
+  color: var(--ink-muted);
+  margin-bottom: var(--space-3);
+}
+
+.encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.queHacer { min-width: 280px; }
+.servicio { white-space: nowrap; }
+
+.chips button { cursor: pointer; border: 0; font-family: inherit; }

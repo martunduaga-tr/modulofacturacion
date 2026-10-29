@@ -9,11 +9,13 @@
 .search svg {
   position: absolute;
   left: 12px;
-  top: 19px;
+  top: 50%;
+  transform: translateY(-50%);
   color: var(--ink-subtle);
   pointer-events: none;
 }
-.search .input { padding-left: 38px; }
+/* .input es global: sin :global el módulo la renombra y el padding no aplicaba (la lupa tapaba el texto). */
+.search :global(.input) { padding-left: 38px; }
 .filters { display: flex; gap: var(--space-3); flex-wrap: wrap; }
 .filters .select { min-width: 158px; width: auto; }
 
