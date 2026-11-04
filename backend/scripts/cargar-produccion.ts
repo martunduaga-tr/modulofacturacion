@@ -81,24 +81,7 @@ async function main() {
     }
 
 
-    // Grupo Ospedale: bolsa mensual (umbral 263.250) con tramos de exceso y 12 NIT miembros (esquema: db/17_grupos_tarifa.sql).
-    const dsGrupo = app.get(DataSource);
-    if ((await dsGrupo.query(`SELECT 1 FROM coe.grupos_tarifa WHERE codigo = 'OSPEDALE'`)).length) {
-      console.log('Grupo OSPEDALE: ya existe');
-    } else {
-      await dsGrupo.query(`INSERT INTO coe.grupos_tarifa(codigo,nombre,umbral_mensual) VALUES ('OSPEDALE','Grupo Ospedale: bolsa mensual de Emision',263250)`);
-      await dsGrupo.query(`DECLARE @g INT = (SELECT id FROM coe.grupos_tarifa WHERE codigo='OSPEDALE');
-        INSERT INTO coe.grupo_tarifa_escalones(grupo_id,anio,volumen_desde,volumen_hasta,precio_unitario) VALUES
-          (@g,2026,250001,350000,88.46),(@g,2026,350001,500000,59.31),(@g,2026,500001,700000,48.70),
-          (@g,2026,700001,900000,45.95),(@g,2026,900001,999999999,41.84);
-        INSERT INTO coe.grupo_tarifa_contratos(grupo_id,contrato_id)
-          SELECT @g,id FROM coe.contratos WHERE codigo IN ('900930253-FACTURA-2026','800190884-FACTURA-2026',
-            '900848340-FACTURA-2026','830113849-FACTURA-2026','817003166-FACTURA-2026','800094898-FACTURA-2026',
-            '891409981-FACTURA-2026','810003245-FACTURA-2026','900612531-FACTURA-2026','900408220-FACTURA-2026',
-            '805023423-FACTURA-2026','830512116-FACTURA-2026')`);
-      const [{ n }] = await dsGrupo.query(`SELECT COUNT(*) n FROM coe.grupo_tarifa_contratos`);
-      console.log(`Grupo OSPEDALE: creado con ${n} contratos miembros`);
-    }
+    // Grupo Ospedale: se crea y enlaza solo al importar sus contratos (src/empalme/grupos-conocidos.ts).
 
     // 2. ReteICA: ningún cliente la practica (Contabilidad, 28-oct-2026)
     const ds = app.get(DataSource);

@@ -22,6 +22,7 @@ import { ConsumoExpress } from '../express/entities/consumo-express.entity';
 import { ContratoTarifario, ErrorTarifario, GrupoTarifario, leerTarifarioCsv } from './tarifario-csv';
 import { leerVolumenesCsv, OpcionesVolumen, servicioDeLlave, VolumenesPeriodo } from './volumenes-bigquery';
 import { liquidarPeriodo } from './empalme';
+import { GRUPOS_CONOCIDOS } from './grupos-conocidos';
 import { contratosDesdeBd, planificarGuardado, TarifasDeItemAnio } from './empalme-db';
 import { BigQueryVolumenesService } from './bigquery-volumenes.service';
 import { TrmService } from '../parametros/trm.service';
@@ -247,7 +248,30 @@ export class EmpalmeService {
       },
       m.getRepository(AuditoriaCambio),
     );
+    await this.enlazarGrupoConocido(m, contrato.id, c.contratoId);
     return { contratoNuevo, clienteNuevo, sinRetenciones };
+  }
+
+  /** Si el contrato es miembro de un grupo conocido (Ospedale), crea el grupo si falta y lo enlaza. Idempotente. */
+  private async enlazarGrupoConocido(m: EntityManager, contratoDbId: number, codigoContrato: string): Promise<void> {
+    const g = GRUPOS_CONOCIDOS.find((x) => x.miembros.includes(codigoContrato));
+    if (!g) return;
+    if (!(await m.query(`SELECT OBJECT_ID('coe.grupos_tarifa') AS id`))[0]?.id) return; // esquema 17 sin aplicar
+    let fila: { id: number }[] = await m.query(`SELECT id FROM coe.grupos_tarifa WHERE codigo = @0`, [g.codigo]);
+    if (!fila.length) {
+      await m.query(`INSERT INTO coe.grupos_tarifa(codigo, nombre, umbral_mensual) VALUES (@0, @1, @2)`, [g.codigo, g.nombre, g.umbralMensual]);
+      fila = await m.query(`SELECT id FROM coe.grupos_tarifa WHERE codigo = @0`, [g.codigo]);
+      for (const t of g.tramos) {
+        await m.query(
+          `INSERT INTO coe.grupo_tarifa_escalones(grupo_id, anio, volumen_desde, volumen_hasta, precio_unitario) VALUES (@0, @1, @2, @3, @4)`,
+          [fila[0].id, t.anio, t.desde, t.hasta, t.precio],
+        );
+      }
+    }
+    await m.query(
+      `IF NOT EXISTS (SELECT 1 FROM coe.grupo_tarifa_contratos WHERE contrato_id = @1) INSERT INTO coe.grupo_tarifa_contratos(grupo_id, contrato_id) VALUES (@0, @1)`,
+      [fila[0].id, contratoDbId],
+    );
   }
 
   // ---------------------------------------------------------------------------
