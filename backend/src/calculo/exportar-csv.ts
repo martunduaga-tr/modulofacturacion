@@ -5,6 +5,7 @@ import type { Clasificador } from '../clientes/entities/comentario-factura.entit
  * CSV con `;` y coma decimal: así lo abre Excel en español sin pasos extra. UTF-8 con BOM
  * para que las tildes salgan bien.
  */
+const BOM = String.fromCharCode(0xfeff);
 
 /** La "hoja" de Contabilidad a la que pertenece el cobro (el clasificador de la línea de factura). */
 export function clasificadorDe(servicios: string[]): Clasificador | null {
@@ -80,5 +81,5 @@ export function generarCsv(filas: FilaExportacion[]): string {
         .join(';'),
     );
   }
-  return '﻿' + lineas.join('\r\n') + '\r\n';
+  return BOM + lineas.join('\r\n') + '\r\n';
 }

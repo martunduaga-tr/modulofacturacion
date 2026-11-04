@@ -51,6 +51,18 @@ export interface ItemTarifario {
   itemId?: number;
 }
 
+/**
+ * Contrato de grupo (Grupo Ospedale): varios NIT con su propio mínimo mensual y tope, más una bolsa común.
+ * Cada mes se suma el volumen de todos los miembros; lo que pase de `umbral` se valora por tramos
+ * (escalonado, por posición dentro del volumen del grupo) y se cobra a los NIT que superaron su propio tope.
+ */
+export interface GrupoTarifario {
+  codigo: string;
+  /** Transacciones mensuales del grupo incluidas en los mínimos. */
+  umbral: number;
+  escalonesPorAnio: Record<number, { volumenDesde: number; volumenHasta: number; precioUnitario: number }[]>;
+}
+
 export interface ContratoTarifario {
   contratoId: string;
   nit: string;
@@ -63,6 +75,8 @@ export interface ContratoTarifario {
   items: ItemTarifario[];
   /** coe.clientes.id cuando el contrato viene de la base de datos. */
   clienteId?: number;
+  /** Solo si el contrato es miembro de un grupo; sus items minimo_garantizado aportan su volumen a la bolsa. */
+  grupo?: GrupoTarifario;
 }
 
 export interface ErrorTarifario {

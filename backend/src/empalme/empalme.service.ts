@@ -19,7 +19,7 @@ import { AuditoriaCambio } from '../auditoria/entities/auditoria-cambio.entity';
 import { AuditoriaService } from '../auditoria/auditoria.service';
 import { EmpalmePendiente } from './entities/empalme-pendiente.entity';
 import { ConsumoExpress } from '../express/entities/consumo-express.entity';
-import { ContratoTarifario, ErrorTarifario, leerTarifarioCsv } from './tarifario-csv';
+import { ContratoTarifario, ErrorTarifario, GrupoTarifario, leerTarifarioCsv } from './tarifario-csv';
 import { leerVolumenesCsv, OpcionesVolumen, servicioDeLlave, VolumenesPeriodo } from './volumenes-bigquery';
 import { liquidarPeriodo } from './empalme';
 import { contratosDesdeBd, planificarGuardado, TarifasDeItemAnio } from './empalme-db';
@@ -279,7 +279,32 @@ export class EmpalmeService {
         t.recargo = new Decimal(t.recargo).add(r.valor).toNumber(); // decimal exacto, no float
       }
     }
-    return contratosDesdeBd(contratos, tarifas, anio);
+    return contratosDesdeBd(contratos, tarifas, anio, await this.cargarGrupos());
+  }
+
+  /** Contratos de grupo activos: contratos.id → grupo (umbral mensual y tramos del exceso por año). */
+  private async cargarGrupos(): Promise<Map<number, GrupoTarifario>> {
+    const filas: { grupo_id: number; codigo: string; umbral: string; contrato_id: number }[] = await this.dataSource.query(
+      `SELECT g.id grupo_id, g.codigo, g.umbral_mensual umbral, gc.contrato_id
+         FROM coe.grupos_tarifa g JOIN coe.grupo_tarifa_contratos gc ON gc.grupo_id = g.id WHERE g.estado = 'activo'`,
+    );
+    if (!filas.length) return new Map();
+    const tramos: { grupo_id: number; anio: number; desde: string; hasta: string; precio: string }[] = await this.dataSource.query(
+      `SELECT grupo_id, anio, volumen_desde desde, volumen_hasta hasta, precio_unitario precio
+         FROM coe.grupo_tarifa_escalones ORDER BY grupo_id, anio, volumen_desde`,
+    );
+    const grupos = new Map<number, GrupoTarifario>();
+    for (const f of filas) {
+      let g = [...grupos.values()].find((x) => x.codigo === f.codigo);
+      if (!g) {
+        g = { codigo: f.codigo, umbral: Number(f.umbral), escalonesPorAnio: {} };
+        for (const t of tramos.filter((x) => x.grupo_id === f.grupo_id)) {
+          (g.escalonesPorAnio[t.anio] ??= []).push({ volumenDesde: Number(t.desde), volumenHasta: Number(t.hasta), precioUnitario: Number(t.precio) });
+        }
+      }
+      grupos.set(f.contrato_id, g);
+    }
+    return grupos;
   }
 
   /** Liquidar con el CSV exportado de BigQuery (respaldo si la consulta directa no está disponible). */

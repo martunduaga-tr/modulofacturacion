@@ -1,7 +1,7 @@
 import type { Contrato } from '../contratos/entities/contrato.entity';
 import type { TarifaEntrada } from '../calculo/tipos';
 import type { PreLiquidado } from '../calculo/entities/pre-liquidado.entity';
-import type { ContratoTarifario } from './tarifario-csv';
+import type { ContratoTarifario, GrupoTarifario } from './tarifario-csv';
 import type { Liquidacion } from './empalme';
 
 /**
@@ -26,6 +26,8 @@ export function contratosDesdeBd(
   contratos: Contrato[],
   tarifasPorItem: Map<number, TarifasDeItemAnio>,
   anio: number,
+  /** contratos.id → grupo al que pertenece (contrato de grupo, ver 17_grupos_tarifa.sql). */
+  grupos: Map<number, GrupoTarifario> = new Map(),
 ): { contratos: ContratoTarifario[]; sinCodigoData: { contrato: string; itemId: number }[] } {
   const sinCodigoData: { contrato: string; itemId: number }[] = [];
   const res: ContratoTarifario[] = [];
@@ -70,6 +72,7 @@ export function contratosDesdeBd(
       perfil: { rtefte: c.cliente.tasaRtefte, rteiva: c.cliente.tasaRteiva, rteica: c.cliente.tasaRteica },
       items,
       clienteId: c.cliente.id,
+      grupo: grupos.get(c.id),
     });
   }
   return { contratos: res, sinCodigoData };

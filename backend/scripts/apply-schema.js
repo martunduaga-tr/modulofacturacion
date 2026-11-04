@@ -46,6 +46,7 @@ const SCRIPTS_INCREMENTALES = [
   { archivo: '14_subservicios_hojas.sql', centinela: "OBJECT_ID('coe.CK_comentarios_factura_hoja')" },
   { archivo: '15_moneda_trm.sql', centinela: "OBJECT_ID('coe.trm_diaria')" },
   { archivo: '16_usuarios_clave.sql', centinela: "COL_LENGTH('coe.usuarios', 'debe_cambiar_clave')" },
+  { archivo: '17_grupos_tarifa.sql', centinela: "OBJECT_ID('coe.grupo_tarifa_contratos')" },
 ];
 
 function baseConfig(database) {

@@ -73,4 +73,12 @@ describe('Subservicio en el empalme', () => {
     expect(r.errores[0].volumen).toBe(175);
     expect(r.errores[0].motivo).toMatch(/^SIN_RETENCIONES: falta RteIVA /);
   });
+
+  it('Express sin retenciones: no se cobra (es plan anual) pero su consumo sí se registra', () => {
+    const c = tarifario([`860002400;PREVISORA;EXPRESS;X1;2026-01-01;2026;iDocumentos;;PLAN_ANUAL;1;1000;500000;ANUAL;;;0`]);
+    const r = liquidarPeriodo(c, volumenes, TASAS_BASE);
+    expect(r.errores).toEqual([]);
+    expect(r.liquidaciones).toEqual([]);
+    expect(r.consumosPlan).toEqual([expect.objectContaining({ nit: '860002400', cantidad: 175 })]);
+  });
 });

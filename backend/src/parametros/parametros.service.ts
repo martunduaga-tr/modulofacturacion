@@ -52,7 +52,12 @@ export class ParametrosService {
     const clave = claveParam.trim().toUpperCase();
     const vigenciaDesde = dto.vigenciaDesde ?? this.hoy();
 
-    let parametro = await this.parametrosRepo.findOne({ where: { clave, vigenciaDesde } });
+    // CAST explícito: el driver manda la fecha como datetime con la hora de Colombia (05:00 UTC) y una
+    // comparación directa contra la columna DATE nunca coincide; el INSERT chocaría con la llave única.
+    let parametro = await this.parametrosRepo
+      .createQueryBuilder('p')
+      .where('p.clave = :clave AND p.vigencia_desde = CAST(:vigenciaDesde AS date)', { clave, vigenciaDesde })
+      .getOne();
     const valorAnterior = parametro ? { valor: parametro.valor } : undefined;
     const accion = parametro ? 'UPDATE' : 'INSERT';
 
