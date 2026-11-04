@@ -42,6 +42,24 @@ export class UsuariosService implements OnModuleInit {
       return;
     }
     const admin = await this.findByUsernameConHash('admin');
+    // Restablecimiento de emergencia: con ADMIN_RESET=true y una ADMIN_PASSWORD explícita, el arranque le pone esa clave
+    // a 'admin' (y lo reactiva). Quien edita variables del servicio ya controla el despliegue; quitar ADMIN_RESET después.
+    if (this.config.get<string>('ADMIN_RESET') === 'true') {
+      const explicita = this.config.get<string>('ADMIN_PASSWORD');
+      if (!explicita) {
+        this.logger.error('ADMIN_RESET=true ignorado: falta ADMIN_PASSWORD (no se restablece a la clave por defecto).');
+      } else {
+        const passwordHash = await bcrypt.hash(explicita, UsuariosService.SALT_ROUNDS);
+        if (admin) await this.usuariosRepo.update(admin.id, { passwordHash, debeCambiarClave: true, estado: 'activo' as EstadoUsuario });
+        else {
+          await this.usuariosRepo.save(
+            this.usuariosRepo.create({ username: 'admin', nombre: 'Administrador', passwordHash, rol: 'administrador', debeCambiarClave: true }),
+          );
+        }
+        this.logger.warn("ADMIN_RESET=true: la clave de 'admin' se restableció a ADMIN_PASSWORD. Quite ADMIN_RESET de las variables.");
+        return;
+      }
+    }
     if (admin && !admin.debeCambiarClave && (await bcrypt.compare(password, admin.passwordHash))) {
       await this.usuariosRepo.update(admin.id, { debeCambiarClave: true });
       this.logger.warn("El usuario 'admin' sigue con la clave por defecto: se pedirá cambiarla al entrar.");
